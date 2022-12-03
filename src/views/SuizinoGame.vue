@@ -57,12 +57,14 @@ const executeGamble = () => {
   isLoading.value = true;
 
   const coinId = getSuitableCoinId(6000)
+  const amount = 100;
+  const player_choice = 1;
 
   executeMoveCall({
     packageObjectId: moduleAddress,
     module: 'Base',
     typeArguments: [],
-    arguments: [casinoAddress, coinId],
+    arguments: [casinoAddress, coinId, amount, player_choice],
     function: 'gamble',
     gasBudget: 1000
   }).then(res =>{
