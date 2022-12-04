@@ -56,7 +56,7 @@ const executeGamble = () => {
   gameStarted.value = true;
   isLoading.value = true;
 
-  const coinId = getSuitableCoinId(6000)
+  const coinId = getSuitableCoinId(100)
   const amount = 100;
   const player_choice = 1;
 
