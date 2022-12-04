@@ -7,6 +7,13 @@ const props = defineProps({
 })
 </script>
 
+<style>
+.modal-wrap{
+  z-index: 99999;
+}
+</style>
+
+
 <template>
 
 

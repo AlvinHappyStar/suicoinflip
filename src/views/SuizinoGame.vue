@@ -43,10 +43,25 @@ const wheelSlots = reactive([
   }
 ]);
 
+const amount = reactive({
+  value: 100000
+})
+
+const player_choice = reactive({
+  value: 1
+})
+
+const coin_state = reactive({
+  value: 2
+})
+
 let initialSpinInterval = ref();
+
 onMounted(()=>{
   initialSpinInterval.value = setupSpinningInterval(120);
 });
+
+
 
 const executeGamble = () => {
   const address = getAddress();
@@ -56,17 +71,18 @@ const executeGamble = () => {
   gameStarted.value = true;
   isLoading.value = true;
 
-  const coinId = getSuitableCoinId(100)
-  const amount = 100;
-  const player_choice = 1;
+  const coinId = getSuitableCoinId(amount.value);
+  console.log(amount.value);
+  console.log(player_choice.value);
+  console.log(coinId);
 
   executeMoveCall({
     packageObjectId: moduleAddress,
     module: 'Base',
     typeArguments: [],
-    arguments: [casinoAddress, coinId, amount, player_choice],
+    arguments: [casinoAddress, coinId, amount.value, player_choice.value],
     function: 'gamble',
-    gasBudget: 1000
+    gasBudget: 10000
   }).then(res =>{
     totalGames.value++;
     const status = res?.effects?.status?.status;
@@ -127,6 +143,15 @@ const clearSpinningInterval = () => {
 onUnmounted(()=>{
   clearSpinningInterval();
 });
+
+const setBettingValue = (para) => {  
+  amount.value = para;
+}
+
+const setPlayerchoice = (para) => {
+  player_choice.value = para;
+}
+
 const resetGame = () => {
   clearSpinningInterval();
   for(let slot of wheelSlots){
@@ -139,6 +164,7 @@ const resetGame = () => {
   gameResults.value = null;
   gameStatus.value = gameStatuses.STANDBY;
   gameResultsObject.value = {};
+  coin_state.value = 2;
   setupSpinningInterval(120);
 }
 const startGame = () => {
@@ -150,12 +176,15 @@ const checkGameStatus = () =>{
   let hasWon = true;
   let icon = null;
   gameStatus.value = gameResultsObject.value.winnings > 0 ? gameStatuses.WIN : gameStatuses.LOSS;
+  
 
   if(gameStatus.value === gameStatuses.WIN){
     uiStore.setNotification("Congratulations 🎉! You won " + gameResultsObject.value.winnings + " MIST!", "success")
+    coin_state.value = gameResultsObject.value.slot_1;
   }
   if(gameStatus.value === gameStatuses.LOSS){
     uiStore.setNotification("😔 You were unlucky this time. maybe try an extra spin?")
+    coin_state.value = player_choice.value === 1 ? 0 : 1;
   }
   for(let slot of wheelSlots){
     if(!icon) {
@@ -170,8 +199,6 @@ const checkGameStatus = () =>{
   }
 }
 
-
-
 </script>
 
 <style>
@@ -182,6 +209,110 @@ const checkGameStatus = () =>{
 .lucky-wheel-slot.loss{
   @apply border-2 border-red-700;
 }
+
+.depth-front {
+    -webkit-box-align: center;
+    align-items: center;
+    background: linear-gradient(to left, rgb(0, 0, 0), rgb(0, 0, 0));
+    border-radius: 100%;
+    display: flex;
+    height: 10em;
+    -webkit-box-pack: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    width: 10em;
+    margin:0px auto;
+}
+
+.gQRSty {
+    background: rgb(42, 116, 202);
+    border: 2px solid rgb(250, 250, 250);
+    padding: 12px;
+    border-top-left-radius: 35px;
+    border-top-right-radius: 35px;
+    display: -webkit-flex;
+    gap: 0.75rem;
+    overflow: hidden;
+    width: 100%;
+    z-index: 10;
+    max-width: 700px;
+    margin-top: 1.5rem
+    
+}
+
+.cUYTSd {
+    -webkit-box-align: center;
+    align-items: center;
+    background: rgb(0, 0, 0);
+    border-radius: 4px;
+    display: flex;
+    gap: 2px;
+    height: 40px;
+    -webkit-box-pack: center;
+    justify-content: center;
+    position: relative;
+    padding: 2px;
+    line-height: 0;
+    width: 100%;
+    z-index: 0;
+}
+
+.jyukYf {
+    -webkit-box-align: center;
+    align-items: center;
+    background: linear-gradient(90deg, rgb(248, 202, 34) 0%, rgb(216, 4, 185) 100%);
+    border: 1px solid rgb(248, 202, 34);    
+    border-radius: 2px;
+    color: rgb(23, 23, 23);
+    display: flex;
+    flex: 1 1 0%;
+    gap: 4px;
+    height: 100%;
+    -webkit-box-pack: center;
+    justify-content: center;
+    line-height: 1.5rem;
+    padding: 0px 16px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 300ms ease-in-out 0s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.jQzBaH {
+    -webkit-box-align: center;
+    align-items: center;
+    background: none;
+    border: 1px solid rgb(248, 202, 34);
+    border-left-width: 0;
+    border-top-width: 0;
+    border-bottom-width: 0;
+    border-radius: 2px;
+    color: white;
+    display: flex;
+    flex: 1 1 0%;
+    gap: 4px;
+    height: 100%;
+    -webkit-box-pack: center;
+    justify-content: center;
+    line-height: 1.5rem;
+    padding: 0px 16px;
+    text-align: center;
+    text-transform: uppercase;
+    transition: all 300ms ease-in-out 0s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.gQRSty .coin-side {
+    width: fit-content;
+}
+
+.gQRSty > div:not(:first-child) {
+    width: calc(50% - 0.375rem);
+}
+
+
 </style>
 
 <template>
@@ -199,6 +330,8 @@ const checkGameStatus = () =>{
         </p>
 
       </div>
+      <div class="depth-front"><img class="side-img" :src="coin_state.value === 2 ? './coin.png' : coin_state.value === 1 ? './head.png : ' : './tail.png'" data-xblocker="passed" style="visibility: visible;">
+      </div>
       <!-- <div class="lucky-wheel-slots grid grid-cols-3 gap-2 md:gap-5">
         <div v-for="slot of wheelSlots" :key="slot.id" :id="`wheel-slot-${slot.id}`"
              class="lucky-wheel-slot bg-white overflow-hidden dark:bg-gray-700 h-[250px] md:h-[320px] rounded-lg shadow flex items-center justify-center"
@@ -212,6 +345,20 @@ const checkGameStatus = () =>{
 
         </div>
       </div> -->
+
+      <div class="gQRSty">
+        <div class="cUYTSd">
+          <button :class="amount.value === 10000000 ? 'jyukYf' : 'jQzBaH'" @click="setBettingValue(10000000)">0.01<div v-html="logo" class="logo-icon"></div></button>
+          <button :class="amount.value === 50000000 ? 'jyukYf' : 'jQzBaH'" @click="setBettingValue(50000000)">0.05<div v-html="logo" class="logo-icon"></div></button>
+          <button :class="amount.value === 100000000 ? 'jyukYf' : 'jQzBaH'" @click="setBettingValue(100000000)">0.1<div v-html="logo" class="logo-icon"></div></button>
+          <button :class="amount.value === 500000000 ? 'jyukYf' : 'jQzBaH'" @click="setBettingValue(500000000)">0.5<div v-html="logo" class="logo-icon"></div></button>
+          <button :class="amount.value === 1000000000 ? 'jyukYf' : 'jQzBaH'" @click="setBettingValue(1000000000)">1<div v-html="logo" class="logo-icon"></div></button>
+        </div>
+        <div class="cUYTSd coin-side">
+          <button :class="player_choice.value === 1 ? 'jyukYf' : 'jQzBaH'" @click="setPlayerchoice(1)">HEAD</button>
+          <button :class="player_choice.value === 0 ? 'jyukYf' : 'jQzBaH'" @click="setPlayerchoice(0)">TAIL</button>
+        </div>
+      </div>
 
 
       <div class="mt-6 text-center">
