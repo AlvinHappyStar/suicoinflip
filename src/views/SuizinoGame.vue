@@ -44,7 +44,7 @@ const wheelSlots = reactive([
 ]);
 
 const amount = reactive({
-  value: 100000
+  value: 10000000
 })
 
 const player_choice = reactive({
@@ -260,7 +260,7 @@ const checkGameStatus = () =>{
 .jyukYf {
     -webkit-box-align: center;
     align-items: center;
-    background: linear-gradient(90deg, rgb(248, 202, 34) 0%, rgb(216, 4, 185) 100%);
+    background: linear-gradient(90deg, rgb(255, 255, 255) 0%, rgb(158, 103, 150) 100%);
     border: 1px solid rgb(248, 202, 34);    
     border-radius: 2px;
     color: rgb(23, 23, 23);

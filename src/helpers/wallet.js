@@ -136,7 +136,9 @@ export function useWallet() {
 
         let coinId = null;
         for(let coin of authStore.coins){
+            console.log(coin);
             if(coin.balance >= amount){
+                console.log(coin.id);
                 coinId = coin.id
                 break;
             }
