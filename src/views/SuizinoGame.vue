@@ -8,7 +8,7 @@ import {useUiStore} from "../stores/ui";
 
 const authStore = useAuthStore();
 const uiStore = useUiStore();
-const {executeMoveCall, getAddress, getSuitableCoinId} = useWallet();
+const {executeMoveCall, getAddress, getSuitableCoinId, getHistory} = useWallet();
 
 const gameStatuses = {
   STANDBY: 'STANDBY',
@@ -55,10 +55,20 @@ const coin_state = reactive({
   value: 2
 })
 
+const history = reactive({
+  value: []  
+})
+
+
+
+
 let initialSpinInterval = ref();
 
 onMounted(()=>{
   initialSpinInterval.value = setupSpinningInterval(120);
+  getHistory().then((data) => {
+    history.value = data;
+  });
 });
 
 
@@ -82,7 +92,7 @@ const executeGamble = () => {
     typeArguments: [],
     arguments: [casinoAddress, coinId, amount.value, player_choice.value],
     function: 'gamble',
-    gasBudget: 10000
+    gasBudget: 1000
   }).then(res =>{
     totalGames.value++;
     const status = res?.effects?.status?.status;
@@ -153,6 +163,7 @@ const setPlayerchoice = (para) => {
 }
 
 const resetGame = () => {
+  
   clearSpinningInterval();
   for(let slot of wheelSlots){
     slot.randomSlides = [];
@@ -313,6 +324,53 @@ const checkGameStatus = () =>{
 }
 
 
+.bZJbip {
+  -webkit-box-align: center;
+  align-items: center;
+  background: rgb(38, 48, 59);
+  border-radius: 0px 0px 35px 35px;
+  border-right: 2px solid rgb(0, 0, 0);
+  border-bottom: 2px solid rgb(0, 0, 0);
+  border-left: 2px solid rgb(0, 0, 0);
+  border-image: initial;
+  border-top: none;
+  display: flex;
+  flex-direction: column;
+  -webkit-box-pack: justify;
+  justify-content: space-between;
+  max-width: 700px;
+  padding: 0px 0px 28px;
+  position: relative;
+  width: 100%;
+}
+
+.jJnyom {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  overflow-y: scroll;
+  padding: 20px 20px 24px;
+  width: 100%;
+  height: calc(100vh - 680px);
+  min-height: 200px;
+}
+
+.jJnyom li {
+  border-bottom: 1px solid rgb(23, 23, 23);
+  display: flex;
+  gap: 100px;
+  padding: 0px 0px 12px;
+  width: 100%;
+  font-size: 0.875rem;
+  color: rgb(255, 255, 255);
+  text-align: center;
+}
+
+.jJnyom li span:nth-last-child(1) {
+  flex: 1 1 0%;
+  text-align: right;
+}
 </style>
 
 <template>
@@ -330,21 +388,8 @@ const checkGameStatus = () =>{
         </p>
 
       </div>
-      <div class="depth-front"><img class="side-img" :src="coin_state.value === 2 ? './coin.png' : coin_state.value === 1 ? './head.png : ' : './tail.png'" data-xblocker="passed" style="visibility: visible;">
+      <div class="depth-front"><img class="side-img" :src="coin_state.value === 2 ? './coin.png' : coin_state.value === 1 ? './head.png' : './tail.png'" data-xblocker="passed" style="visibility: visible;">
       </div>
-      <!-- <div class="lucky-wheel-slots grid grid-cols-3 gap-2 md:gap-5">
-        <div v-for="slot of wheelSlots" :key="slot.id" :id="`wheel-slot-${slot.id}`"
-             class="lucky-wheel-slot bg-white overflow-hidden dark:bg-gray-700 h-[250px] md:h-[320px] rounded-lg shadow flex items-center justify-center"
-             :class="`${gameStatus.toLowerCase()}`">
-
-          <div class="">
-            <div v-for="(item) in slot.randomSlides" class="block w-full text-center text-5xl md:text-6xl py-6 ">
-              {{item}}
-            </div>
-          </div>
-
-        </div>
-      </div> -->
 
       <div class="gQRSty">
         <div class="cUYTSd">
@@ -358,6 +403,12 @@ const checkGameStatus = () =>{
           <button :class="player_choice.value === 1 ? 'jyukYf' : 'jQzBaH'" @click="setPlayerchoice(1)">HEAD</button>
           <button :class="player_choice.value === 0 ? 'jyukYf' : 'jQzBaH'" @click="setPlayerchoice(0)">TAIL</button>
         </div>
+      </div>
+
+      <div class="bZJbip">
+        <ul class="jJnyom">
+          <li v-for="item in history.value" v-bind:key="item"><span>{{item.sender}}</span><span>{{item.cost}}</span><span>{{item.winning == 0? 'LOST' : 'WIN'}}</span><span>{{item.time}}</span></li>
+        </ul>
       </div>
 
 

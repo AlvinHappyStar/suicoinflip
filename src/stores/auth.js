@@ -12,7 +12,8 @@ export const useAuthStore = defineStore({
             isAdmin: false,
             objectAddress: null
         },
-        coins: [1000000000],
+        coins: [],
+        history: [],
         toggleWalletAuthModal: false
     }),
 

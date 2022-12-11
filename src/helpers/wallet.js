@@ -1,5 +1,5 @@
-import {JsonRpcProvider} from "@mysten/sui.js";
-import {casinoAddress, localStorageKeys, moduleAddress, suiRpcUrl} from "./constants";
+import {getEvents, JsonRpcProvider} from "@mysten/sui.js";
+import {casinoAddress, localStorageKeys, moduleAddress, moduleName, suiRpcUrl} from "./constants";
 import {computed, onMounted, ref} from "vue";
 import {useAuthStore} from "../stores/auth";
 import {useUiStore} from "../stores/ui";
@@ -68,7 +68,7 @@ export function useWallet() {
         if(!address) return;
 
         provider.getObjectsOwnedByAddress(address).then(res =>{
-            let casinoOwnership = res.find(x => x.type.includes('CasinoOwnership') && x.type.startsWith(moduleAddress));
+            let casinoOwnership = res.find(x => x.type.includes('CoinFlipOwnership'));
             if(casinoOwnership){
                 authStore.casinoAdmin.isAdmin = true;
                 authStore.casinoAdmin.objectAddress = casinoOwnership.objectId;
@@ -77,7 +77,6 @@ export function useWallet() {
             let coinAddresses = res.filter(x => x.type.includes('Coin'));
 
             provider.getObjectBatch(coinAddresses.map(x => x.objectId)).then(res=>{
-
                 const coins = res.map(x => {
                     return {
                         id: x?.details?.data?.fields?.id?.id,
@@ -110,6 +109,49 @@ export function useWallet() {
         }
         updateSuiAddress(null);
         authStore.$reset();
+    }
+
+    const getHistory = async () => {
+        
+        let history_result = await provider.getTransactions({
+            "InputObject": casinoAddress
+            },null,10, true).then(res =>{
+
+            let i = 0;
+            let history_array = [];
+            for(i = 0; i < res.data.length; i ++)
+            {
+                let temp = provider.getTransactionWithEffects(res.data.at(i)).then(res =>{
+                    if(res.certificate.data.transactions.at(0).Call.function.includes('gamble') && res.effects.status.status.includes('success'))
+                    {
+                        
+                        let a = res.effects.events.at(res.effects.events.length - 1);
+                        // console.log(a);
+                        let d = new Date(res.timestamp_ms);
+                        let dn = d.toLocaleString();
+                        let s = a.moveEvent.fields.gambler;
+                        
+                        return {
+                            sender:     s.slice(0,5) + '...' + s.slice(-4),
+                            cost:       res.certificate.data.transactions.at(0).Call.arguments.at(2)/1000000000,
+                            winning:    a.moveEvent.fields.winnings > 0? 1 : 0,
+                            time:       dn
+                        }
+                        
+                    }
+                    else return null;
+                });
+                
+                temp.then((data) => {
+                    if (data) history_array.push(data);
+                });
+
+            }
+            
+            return history_array;
+        });
+        
+        return history_result;
     }
 
     // prompt to request access to the wallet.
@@ -146,11 +188,13 @@ export function useWallet() {
         return coinId;
     }
 
+    
+
     const executeMoveCall = async (params) => {
         if(!authStore.walletProvider || !window[authStore.walletProvider]) return logout();
 
         return window[authStore.walletProvider].executeMoveCall(params);
     }
 
-    return {provider, walletProviders,verifyWalletPermissions, requestWalletAccess,getAddress,logout,executeMoveCall,getSuitableCoinId, isPermissionGranted, permissionGrantedError}
+    return {provider, walletProviders,verifyWalletPermissions, requestWalletAccess,getAddress,logout,executeMoveCall,getSuitableCoinId,getHistory, isPermissionGranted, permissionGrantedError}
 }
